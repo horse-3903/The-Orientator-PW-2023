@@ -1,68 +1,130 @@
-# HCI Chatbot
-## Rationale
-Our goal for this project is to create a functional chatbot to assist new students by addressing their queries about the school. Inspired by ChatGPT, we aim to develop a specialised chatbot that excels in answering HCI-related questions on Discord, aiding both freshmen and seniors in understanding the school.
+<div align="center">
 
-## Installation
+# The Orientator PW 2023
+
+A DialoGPT-powered Discord bot that helps Hwa Chong Institution freshmen navigate school life — the original 2023 project work version
+
+[![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.com/)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=flat-square&logo=huggingface&logoColor=black)](https://huggingface.co/)
+[![Last Commit](https://img.shields.io/github/last-commit/horse-3903/The-Orientator-PW-2023?style=flat-square)](../../commits)
+
+</div>
+
+---
+
+## Overview
+
+The Orientator PW 2023 is the original version of The Orientator, developed as a Project Work (PW) assignment in 2023. It is a Discord bot powered by a locally fine-tuned **DialoGPT** model, trained on HCI-specific Q&A data to assist freshmen with questions about school culture, traditions, and important dates.
+
+This project is the direct predecessor to [The Orientator 2.0](https://github.com/horse-3903/The-Orientator-2.0), which replaced the Discord interface with a web app and upgraded the AI backend from DialoGPT to Google Gemini.
+
+## Features
+
+- **Fine-tuned DialoGPT model** — locally trained causal language model on HCI-specific question-and-answer data
+- **Private ticket channels** — users click a button to create a private Discord channel for one-on-one interaction with the bot
+- **ISP event lookup** — `?date` command retrieves school event details from a scraped ISP-HS calendar
+- **Conversation history** — per-user chat history stored in SQLite for multi-turn dialogue
+- **Data augmentation pipeline** — scripts to expand the base dataset from ~81 rows to ~6.7M rows for model training
+
+## Tech Stack
+
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Discord](https://img.shields.io/badge/Discord%20(nextcord)-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://docs.nextcord.dev/)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace%20Transformers-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/docs/transformers)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.9+
+- A Discord bot token (from the [Discord Developer Portal](https://discord.com/developers/applications))
+- A trained DialoGPT model checkpoint stored locally
+- HCI ISP-HS account (for the `?date` event scraper)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/horse-3903/The-Orientator-PW-2023.git
+   cd The-Orientator-PW-2023
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Create the environment file at `src/.env`:
+   ```env
+   PARENT_DIR=<full path to The-Orientator-PW-2023/ folder>
+   EXECUTABLE_PATH=<path to chromedriver.exe>
+   ```
+
+4. Create `src/bot.json` with your Discord bot token:
+   ```json
+   { "token": "YOUR_DISCORD_BOT_TOKEN" }
+   ```
+
+5. Set up ISP cookies for the event scraper:
+   - Install the [Cookie Editor](https://chrome.google.com/webstore/detail/cookie-editor/) Chrome extension
+   - Log into ISP-HS in your browser
+   - Click the Cookie Editor extension and export cookies as JSON
+   - Save the exported JSON to `src/isp_cookies.json`
+
+### Training the Model
+
+1. Ensure `src/data/base_data.csv` exists with HCI Q&A pairs
+2. Run the augmentation script: `python src/data-collection/augment_data.py`
+3. Open `src/model/train_model.ipynb` and run all cells to fine-tune the model
+
+### Running the Bot
+
+```bash
+python src/bot/main.py
 ```
-pip install -r requirements.txt
+
+Invite your bot to a Discord server and send the intro message to a channel. Users can then click **Create Ticket** to open a private conversation.
+
+### Bot Commands
+
+| Command | Description |
+|---------|-------------|
+| `?date <event name>` | Look up the date and duration of a school event |
+| *(any message in ticket channel)* | Receive an AI-generated answer about HCI |
+
+## Project Structure
+
 ```
-**All other required files will be automatically installed after running code**
-## Files
+The-Orientator-PW-2023/
+├── src/
+│   ├── bot/
+│   │   ├── main.py             # Discord bot entry point
+│   │   ├── query_response.py   # DialoGPT inference and conversation history
+│   │   └── get_isp_events.py   # ISP-HS event lookup
+│   ├── data/
+│   │   ├── base_data.csv       # Original HCI Q&A dataset (~81 rows)
+│   │   ├── augmented_data.csv  # Augmented dataset (~6.7M rows)
+│   │   ├── processed_data.csv  # Final training dataset (~2000 rows)
+│   │   └── isp_events.json     # Scraped ISP event data
+│   ├── data-collection/
+│   │   ├── augment_data.py     # Data augmentation script
+│   │   └── scrape_isp.py       # ISP-HS web scraper
+│   └── model/
+│       ├── train_model.ipynb   # Model fine-tuning notebook
+│       └── test_model.py       # Model inference testing
+```
 
-### `src/bot/main.py`
-Main driver code for running The Orientator Discord Bot. Requires `src/bot.json`, which contains `{"token" : TOKEN}`, `TOKEN` being the API Token for the Discord Bot.
+## Differences from The Orientator 2.0
 
-#### Command : `?date`
-#### Command : `Create Conversation`
+| Feature | PW 2023 (this repo) | 2.0 |
+|---------|---------------------|-----|
+| Interface | Discord bot | Web app (Flask) |
+| AI model | Fine-tuned DialoGPT | Fine-tuned Google Gemini |
+| School calendar | ISP-HS scraper + `?date` command | N/A |
+| Deployment | Local / server process | Flask server |
 
-### `src/bot/query_response.py`
-Separate code called by `src/bot/main.py` for chatbot capabilities.
+## License
 
-### `src/bot/get_isp_events.py`
-Separate code called by `src/bot/main.py` for retrieving ISP events. Requires `src/data/isp_events.json`.
-
-### `src/data/base_data.csv`
-Original data for chatbot, unedited and in simplest form. Required for training chatbot. Contains ~81 rows of data.
-
-### `src/data/augmented_data.csv`
-Augmented data for chatbot, changed and complex form. Required for training chatbot. Contains ~6700000 rows of data. Created after running `src/data-collection/augment_data.py`.
-
-### `src/data/processed_data.csv`
-Augmented and processed data for chatbot, changed and final form. Required for training chatbot. Contains ~2000 rows of data. Created after running `src/data-collection/augment_data.py`.
-
-### `src/data/isp_events.json`
-Original data for ISP events, required for `?date` command. Created after running `src/data-collection/scrape_isp.py`.
-
-### `src/data-collection/augment_data.py`
-Separate code for augmenting data. Required for training chatbot. Requires `src/data/base_data.csv`. 
-
-### `src/data-collection/scrape_isp.py`
-Separate code for web scraping ISP-HS. Required for `src/bot/get_isp_events.py` and `src/data/isp_events.json`. 
-
-### `src/model/train_model.ipynb`
-Main code for training chatbot model. Requires `src/data/base_data.csv`, `src/data/augmented_data.csv`.
-
-### `src/model/test_model.py`
-Separate code for quick testing of online models (on HuggingFace), or local models (stored in folder). 
-
-## Others (To create on your own)
-### `src/.env`
-Contains directory information (required)
-
-`PARENT_DIR` = Full path to `The-Orientator-PW-2023/` folder
-
-`EXECUTABLE_PATH` = Path to `src/data-collection/drivers/chromedriver.exe`
-
-### `src/bot.json`
-Contains Discord Bot API Token
-
-`"token"` : Discord Bot API Token
-
-### `src/isp_cookies.json`
-Contains cookies for ISP-HS login (requires HCI account)
-
-1. Install `Cookie Editor` extension from Chrome Web Store
-2. Log into ISP-HS in browser
-3. Press on `Cookie Editor` extension in the top-right corner of screen
-4. Export Cookies as JSON (copied to clipboard)
-5. Create `src/isp_cookies.json` and paste JSON into file
+This project does not include a license file. All rights reserved unless otherwise stated.
